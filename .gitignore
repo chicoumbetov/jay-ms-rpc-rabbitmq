@@ -1,0 +1,19 @@
+node_modules
+/node_modules
+npm-debug.log
+.DS_Store
+package-lock.json
+.env
+dist
+opt
+coverage
+
+private-key.pem
+certificate.pem
+csr.pem
+## PEM-encoded certificate data
+*.pem
+## Certificate Sign Request
+*.csr
+
+.netlify
