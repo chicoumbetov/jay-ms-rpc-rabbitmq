@@ -1,10 +1,20 @@
 import express from "express";
+
+const { RPCObserver } = require("./rpc");
 const { app } = require("./socket/server");
 const PORT = 9000;
 
 app.use(express.json());
 
-app.get("/profile", (req: any, res: any) => {
+const fakeCustomerResponse = {
+  _id: "klsdjqfmlkd,sqfmljd",
+  name: "Mike",
+  country: "Poland",
+};
+
+RPCObserver("CUSTOMER_RPC_QUEUE", fakeCustomerResponse);
+
+app.get("/wishlist", (req: any, res: any) => {
   return res.json("Customer Service");
 });
 
