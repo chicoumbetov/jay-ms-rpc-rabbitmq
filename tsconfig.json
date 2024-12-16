@@ -26,6 +26,8 @@
     "swagger-docs/swagger.json",
     "src/**/*",
     "src/index.ts",
+    "src/customer.ts",
+    "src/products.ts",
     "src/index.html",
     "jest-mongodb-config.ts"
   ],

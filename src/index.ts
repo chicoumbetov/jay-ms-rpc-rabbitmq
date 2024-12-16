@@ -4,13 +4,10 @@ import { app } from "./socket/server";
 async function start() {
   app.use(express.json());
 
-  app.use("/", (req, res, next) => {
+  app.use("/", (req: any, res: any, next: any) => {
     return res.status(200).json({ msg: "Hello from Shopping Server " });
   });
 
-  app.listen(8006, () => {
-    console.log("Shopping Server is listening on http://localhost:8006");
-  });
   try {
     app.use;
   } catch (error) {

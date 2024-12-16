@@ -1,34 +1,37 @@
 {
   "name": "jay-ms-rpc-rabbitmq",
   "version": "1.0.0",
-  "main": "src/index.ts",
   "files": [
     "dist"
   ],
   "readmeFilename": "README.md",
   "scripts": {
-    "start": "npx nodemon",
+    "customer": "tsx src/customer.ts",
+    "products": "tsx src/products.ts",
+    "start": "concurrently --kill-others \"yarn run customer\" \"yarn run products\"",
     "build": "tsc",
     "swagger-autogen": "ts-node ./swagger-docs/swagger.ts",
     "netlifyDeploy": "netlify deploy --prod"
   },
   "engines": {
-    "node": "22.x"
+    "node": ">=18.x"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "description": "",
   "dependencies": {
     "amqplib": "^0.10.5",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "tsx": "^4.19.2",
     "uuid": "^11.0.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.2",
+    "concurrently": "^9.1.0",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
     "types": "^0.1.1",
