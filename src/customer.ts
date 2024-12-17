@@ -35,5 +35,5 @@ app.get("/", (req: any, res: any) => {
 
 app.listen(PORT, () => {
   console.log(`Customer MS is listening on http://localhost:${PORT}`);
-  // console.clear();
+  console.clear();
 });
