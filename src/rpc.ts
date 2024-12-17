@@ -5,14 +5,13 @@ const { v4: uuid4 } = require("uuid");
 
 let amqplibConnection: Connection | null = null;
 
-const getChannel = async (): Promise<Channel | undefined> => {
+const getChannel = async () => {
   if (amqplibConnection === null) {
     amqplibConnection = await amqplib.connect(
-      "amqps://oqujvuif:uiKVbfsGYaRKMHK2nrEqZzFbsPNG95Qe@seal.lmq.cloudamqp.com/oqujvuif"
+      "amqp://guest:guest@localhost:5672"
     );
-  } else {
-    return await amqplibConnection?.createChannel();
   }
+  return await amqplibConnection?.createChannel();
 };
 
 const expensiveDBOperation = (payload: any, fakeResponse: any) => {
@@ -22,38 +21,41 @@ const expensiveDBOperation = (payload: any, fakeResponse: any) => {
   return new Promise((res, rej) => {
     setTimeout(() => {
       res(fakeResponse);
-    }, 9000);
+    }, 2000);
   });
 };
 
 const RPCObserver = async (RPC_QUEUE_NAME: string, fakeResponse: any) => {
   const channel: Channel | undefined = await getChannel();
-  await channel?.assertQueue(RPC_QUEUE_NAME, {
-    durable: false, // ! TODO: once delivered, will be removed
-  });
-  channel?.prefetch(1);
-  channel?.consume(
-    RPC_QUEUE_NAME,
-    async (msg: any) => {
-      if (msg.content) {
-        // DB Operation
-        const payload = JSON.parse(msg.content.toString());
-        const response = await expensiveDBOperation(payload, fakeResponse); // call fake DB operation
+  if (channel !== undefined) {
+    await channel.assertQueue(RPC_QUEUE_NAME, {
+      durable: false, // ! TODO: once delivered, will be removed
+    });
+    channel.prefetch(1);
+    channel.consume(
+      RPC_QUEUE_NAME,
+      async (msg: any) => {
+        if (msg.content) {
+          // * it's in form of: <Buffer 7b 22 63 ...
+          // DB Operation
+          const payload = JSON.parse(msg.content.toString());
+          const response = await expensiveDBOperation(payload, fakeResponse); // call fake DB operation
 
-        channel?.sendToQueue(
-          msg.properties.replyTo,
-          Buffer.from(JSON.stringify(response)),
-          {
-            correlationId: msg.properties.correlationId,
-          }
-        );
-        channel.ack(msg);
+          channel?.sendToQueue(
+            msg.properties.replyTo,
+            Buffer.from(JSON.stringify(response)),
+            {
+              correlationId: msg.properties.correlationId,
+            }
+          );
+          channel.ack(msg);
+        }
+      },
+      {
+        noAck: false,
       }
-    },
-    {
-      noAck: false,
-    }
-  );
+    );
+  }
 };
 
 const requestData = async (
@@ -65,8 +67,7 @@ const requestData = async (
     const channel = await getChannel();
 
     const q = await channel?.assertQueue("", { exclusive: true });
-
-    channel?.sendToQueue(
+    const res = channel?.sendToQueue(
       RPC_QUEUE_NAME,
       Buffer.from(JSON.stringify(requestPayload)),
       {
@@ -81,11 +82,12 @@ const requestData = async (
         channel?.close();
         resolve("API could not fullfil the request!");
       }, 8000);
-      if (q?.queue) {
-        channel?.consume(
+
+      if (channel && q?.queue) {
+        channel.consume(
           q.queue,
           (msg: any) => {
-            if (msg.properties.correlationId == uuid) {
+            if (msg.properties.correlationId === uuid) {
               resolve(JSON.parse(msg.content.toString()));
               clearTimeout(timeout);
             } else {
